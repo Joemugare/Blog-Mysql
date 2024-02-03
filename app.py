@@ -1,16 +1,28 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import os
 
 app = Flask(__name__)
 
-# Replace these with your MySQL database credentials
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="Qunta729",
-    database="BLOG"
-)
+# Use Heroku environment variables for database configuration
+db_config = {
+    'host': os.environ.get('DB_HOST', 'localhost'),
+    'user': os.environ.get('DB_USER', 'root'),
+    'password': os.environ.get('DB_PASSWORD', 'Qunta729'),
+    'database': os.environ.get('DB_DATABASE', 'Blog'),
+}
+
+# Establish the MySQL database connection
+db = mysql.connector.connect(**db_config)
 cursor = db.cursor()
+
+# Adjust the authentication method for the MySQL user
+cursor.execute("ALTER USER '{}'@'{}' IDENTIFIED WITH mysql_native_password BY '{}';".format(
+    db_config['user'], db_config['host'], db_config['password']))
+
+def get_current_user_id():
+    # Replace this with your authentication logic to get the current user ID
+    return 1  # Placeholder value
 
 # Adjust the authentication method for MySQL user
 cursor.execute("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Qunta729';")
@@ -101,4 +113,5 @@ def register():
     return render_template('register.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
